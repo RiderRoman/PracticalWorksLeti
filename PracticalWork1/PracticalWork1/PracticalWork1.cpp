@@ -11,7 +11,7 @@
 using namespace std;
 
 union BinF {
-    int i;
+    int int_form;
     float number;
 };
 BinF binf;
@@ -32,49 +32,30 @@ bool problem() {
     else return 1;
 }
 
-
-void PrintBinInt(int num) { // Задание 2,3
+void PrintBinInt(int num) { // Задание 2
     cout << "Результат: ";
     uint32_t mask = 1 << sizeof(int) * 8 - 1;
     for (int i = 0; i < sizeof(int) * 8; i++) {
-        if (num & mask) {
-            cout << 1;
-            if (i == 0 || i == 7) cout << " ";
-            if (i > 7) {
-                if ((i - 7) % 8 == 0) cout << " ";
-            }
-        }
-        else {
-            cout << 0;
-            if (i == 0 || i == 7) cout << " ";
-            if (i > 7) {
-                if ((i - 7) % 8 == 0) cout << " ";
-            }
+        cout << ((num & mask) ? '1' : '0');
+        if (i == 0 || i == 7) cout << " ";
+        if (i > 7) {
+            if ((i - 7) % 8 == 0) cout << " ";
         }
         mask >>= 1;
     }
-    cout <<  "\n           ^ Sign";
+    cout << "\n           ^ Sign";
     cout << endl << endl;
 }
 
-void PrintBinFloat(float num) { // Задание 2,3
+void PrintBinFloat(float num) { // Задание 3
     binf.number = num;
     cout << "Результат: ";
-    uint32_t mask = 1 << sizeof(int) * 8 - 1;
-    for (int i = 0; i < sizeof(int) * 8; i++) {
-        if (binf.i & mask) {
-            cout << 1;
-            if (i == 0 || i == 8) cout << " ";
-            if (i > 8) {
-                if ((i - 8) % 8 == 0) cout << " ";
-            }
-        }
-        else {
-            cout << 0;
-            if (i == 0 || i == 8) cout << " ";
-            if (i > 8) {
-                if ((i - 8) % 8 == 0) cout << " ";
-            }
+    uint32_t mask = 1 << sizeof(float) * 8 - 1;
+    for (int i = 0; i < sizeof(float) * 8; i++) {
+        cout << ((binf.int_form & mask) ? '1' : '0');  
+        if (i == 0 || i == 8) cout << " "; // пробелы
+        if (i > 8) {
+            if ((i - 8) % 8 == 0) cout << " ";
         }
         mask >>= 1;
     }
@@ -88,7 +69,7 @@ void PrintBinDouble(double num) { // задание 4
     uint64_t mask = 1ULL << 63;
     for (int i = 0; i < 64; i++) {
         cout << ((bind.int_form & mask) ? '1' : '0');
-        if (i == 0 || i == 11) cout << " ";
+        if (i == 0 || i == 11) cout << " "; // пробелы
         if (i > 11) {
             if ((i + 1) % 8 == 0) cout << " ";
         }
@@ -121,8 +102,8 @@ void ReplaceBitsFloat() {
     cout << "Введите значение бита (0-1): ";
     cin >> bitVal;
 
-    if (bitVal) binf.i |= (uint32_t(1) << pos);
-    else binf.i &= ~(uint32_t(1) << pos);
+    if (bitVal) binf.int_form |= (uint32_t(1) << pos);
+    else binf.int_form &= ~(uint32_t(1) << pos);
 
     PrintBinFloat(binf.number);
     cout << "Новое число: " << binf.number << endl << endl;
@@ -157,8 +138,7 @@ bool MenuForReplace() {
             break;
         case 2:
             system("cls");
-            return false;
-        
+            return false;        
         }
     }
 }
