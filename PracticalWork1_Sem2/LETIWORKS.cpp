@@ -28,6 +28,55 @@ struct Student {
 };
 struct Student students[1000];
 
+struct Hall {
+	int hall_number;
+	int building;
+	int hall_size = 0;
+	bool projector;
+	double rent;
+};
+struct Hall hall[1000];
+
+int read_hall() {
+	ifstream file;
+	int count_hall = 0;
+	int field_number = 0;
+	string line;
+	file.open("halls.txt");
+	while (getline(file, line)) {
+		if (line.length() == 0) {
+			// new hall
+			count_hall++;
+			field_number = 0;
+			continue;
+		}
+		if (field_number >= 6) {
+			cout << "Too many fields";
+			return 0;
+		}
+		switch (field_number) {
+		case 0:
+			hall[count_hall].hall_number = stoi(line);
+			break;
+		case 1:
+			hall[count_hall].building = stoi(line);
+			break;
+		case 2:
+			hall[count_hall].hall_size = stoi(line);
+			break;
+		case 3:
+			hall[count_hall].projector = stoi(line);
+			break;
+		case 4:
+			hall[count_hall].rent = stod(line);
+			break;
+		}
+		field_number++;
+	}
+	file.close();
+	return count_hall;
+}
+
 int read_students() {
 	ifstream file;
 	int number_students = 0;
@@ -50,7 +99,7 @@ int read_students() {
 			students[number_students].full_name = line;
 			break;
 		case 1:
-			students[number_students].sex = stoi(line);
+			students[number_students].sex = stoi(line);			
 			break;
 		case 2:
 			students[number_students].group = stoi(line);
@@ -91,6 +140,11 @@ int read_students() {
 	return number_students;
 }
 
+void print_halls(int i) {
+	cout << "Номер аудитории: " << hall[i].hall_number << "\nКорпус: " << hall[i].building << "\nВместимость (чел.): " << hall[i].hall_size
+		<< "\nНаличие проектора: " << (hall[i].projector ? "Есть" : "Нету") << "\nСтоимость аренды в час: " << hall[i].rent << " руб.\n";
+}
+
 void print_students(string* subjects, int i) {
 	int number_students = read_students();
 	cout << "ФИО: " << students[i].full_name << "\nПол: " << (students[i].sex ? "Мужской" : "Женский") << "\nГруппа: " << students[i].group << "\nНомер в группе: " << students[i].human_number << "\nОценки за сессию:\n";
@@ -120,69 +174,224 @@ void average_mark() {
 		}
 	}
 	cout << "==============ТОП САМЫХ УСПЕШНЫХ СТУДЕНТОВ==============\n";
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < number_students; i++) {
+		if (i == 10) break;
 		int index = indexes[i];
-		cout << (i + 1) << "-е место: " << avg_score[index] << " баллов\t" << "ФИО: " << students[index].full_name << endl;
+		cout << (i + 1) << "-е место: " << avg_score[index] << " балл\t" << "ФИО: " << students[index].full_name << endl;
 	}
 }
 
-void new_student_file(Student* s) {
+bool screen_hall() {
+	short choice = 0;
+	while (true) {
+		cout << "1 - Аудитории с проектором\n"
+			<< "2 - Список свободных аудиторий на указанное время\n"
+			<< "3 - Самая дешёвая аудитория\n"
+			<< "4 - Назад\n\n"
+			<< "Выберите информацию которую хотите узнать: ";
+		if (!(cin >> choice)) problem();
+		switch (choice) {
+		case 1: {
+			system("cls");
+			int count_halls = read_hall();
+			for (int i = 0; i < count_halls; i++) {
+				if (hall[i].projector) print_halls(i);
+			}
+			break;
+		}
+		case 2:
+			system("cls");
+
+			break;
+		case 3: {
+			system("cls");
+			int count_halls = read_hall();
+			vector<double> rents(count_halls);
+			
+			
+			for (int i = 0; i < count_halls; i++) rents[i] = hall[i].rent;
+			
+			double mini = rents[0];
+			for (int i = 0; i < count_halls - 1; i++) if (mini > rents[i + 1]) mini = rents[i + 1];
+
+			for (int i = 0; i < count_halls; i++) if (hall[i].rent == mini) print_halls(i);
+			
+			break;
+		}
+		case 4:
+			system("cls");
+			return false;
+		default:
+			system("cls");
+		}
+	}
+}
+
+void new_hall_file() {
+	ofstream record;
+	record.open("halls.txt", ios::app);
+	if (!record.is_open()) { cout << "Не получилось открыть файл."; }
+	else {
+		record << hall->hall_number << endl << hall->building << endl << hall->hall_size << endl << hall->projector << endl << hall->rent << endl << endl;
+		record.close();
+		cout << "Новая аудитория " << GREEN "успешно" << WHITE << " записана в файл.\n";
+	}
+}
+
+bool new_hall() {
+	short choice = 0;
+	while (true) {
+		cout << "1 - Начать запись\n"
+			<< "2 - Вывести записи\n"
+			<< "3 - Назад\n\n"
+			<< "Чтобы создать запись об аудитории, необходимы следующие данные:\n\n"
+			<< "1. Номер аудитории\n"
+			<< "2. Корпус\n"
+			<< "3. Вместимость (чел.)\n"
+			<< "4. Наличие проектора\n"
+			<< "5. Стоимость аренды в час.\n\n"
+			<< "Выберите действие: ";
+		if (!(cin >> choice)) problem();
+		switch (choice) {
+		case 1: {
+			system("cls");
+			point_number:
+			int count_halls = read_hall();
+			cout << "Введите номер аудитории: ";
+			if (!(cin >> hall->hall_number)) {
+				problem();
+				goto point_number;
+			}
+
+		point_building:
+			cout << "Введите корпус: ";
+			if (!(cin >> hall->building)) {
+				problem();
+				goto point_building;
+			}
+
+		point_size:
+			cout << "Введите вместимость (чел.): ";
+			if (!(cin >> hall->hall_size)) {
+				problem();
+				goto point_size;
+			}
+
+		point_projector:
+			cout << "Наличие проектора (1 - есть, 0 - нету): ";
+			if (!(cin >> hall->projector)) {
+				problem();
+				goto point_projector;
+			}
+
+			cout << "Введите стоимость аренды в час: \n";
+		point_rent:
+			if (!(cin >> hall->rent)) {
+				problem();
+				goto point_rent;
+			}
+			system("cls");
+			new_hall_file();
+			break;
+		}
+		case 2:
+			system("cls");
+			screen_hall();
+			break;
+		case 3:
+			system("cls");
+			return false;
+		default:
+			if (choice > 3) {
+				system("cls");
+				cout << "Хмм, что-то пошло не так...\n";
+			}
+		}
+	}
+}
+
+
+void new_student_file() {
 	ofstream record;
 	record.open("students.txt", ios::app);
 	if (!record.is_open()) { cout << "Не получилось открыть файл."; }
 	else {
-		record << s->full_name << endl << s->sex << endl << s->group << endl << s->human_number << endl;
-		for (int i = 0; i < 8; i++) record << s->marks[i] << endl;
-		record << s->student_id << endl << endl;
+		record << students->full_name << endl << students->sex << endl << students->group << endl << students->human_number << endl;
+		for (int i = 0; i < 8; i++) record << students->marks[i] << endl;
+		record << students->student_id << endl << endl;
 		record.close();
 		cout << "Новый студент(-ка) " << GREEN "успешно" << WHITE << " записан(-а) в файл.\n";
 	}
 }
 
-bool new_student(Student* s, string* subjects) {
+bool new_student(string* subjects) {
 	short choice = 0;
 	while (true) {
 		cout << "1 - Начать запись\n"
-			<< "2 - Назад\n\n"
+			<< "2 - Меню для аудиторий\n"
+			<< "3 - Назад\n\n"
 			<< "Чтобы создать запись о студенте, необходимы следующие данные:\n\n"
 			<< "1. Фамилия Имя Отчество\n"
 			<< "2. Пол (М/Ж)\n"
 			<< "3. Номер группы\n"
 			<< "4. Номер в списке группы\n"
 			<< "5. Оценки за прошедшую сессию (3 экзамена, 5 диф.З.).\n\n"
-			<< "Выберите действие: " << GREEN;
-		if(!(cin >> choice)) problem();
-		cout << WHITE;
+			<< "Выберите действие: ";
+		if (!(cin >> choice)) problem();
 		switch (choice) {
-			case 1: {
-				system("cls");
-				int number_students = read_students();
+		case 1: {
+			system("cls");
+			int number_students = read_students();
+			cout << "Введите ФИО: ";
+			cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			getline(cin, students->full_name);
 
-				cout << "Введите ФИО: ";
-				cin.ignore(numeric_limits<streamsize>::max(), '\n');
-				getline(cin, s->full_name);
-
-				cout << "Введите пол. 1 - Мужчина, 0 - Женщина: "; cin >> s->sex;
-				cout << "Введите номер группы: "; cin >> s->group;
-				cout << "Введите номер в списке группы: "; cin >> s->human_number;
-				cout << "Введите оценки за сессию: \n";
-				for (int i = 0; i < 8; i++) {
-					cout << subjects[i]; cin >> s->marks[i];
-				}
-				s->student_id = number_students + 1;
-				system("cls");
-				
-				new_student_file(s);
-				break;
+		point_sex:
+			cout << "Введите пол. 1 - Мужчина, 0 - Женщина: ";
+			if (!(cin >> students->sex)) {
+				problem();
+				goto point_sex;
 			}
+
+		point_group:
+			cout << "Введите номер группы: ";
+			if (!(cin >> students->group)) {
+				problem();
+				goto point_group;
+			}
+
+		point_number:
+			cout << "Введите номер в списке группы: ";
+			if (!(cin >> students->human_number)) {
+				problem();
+				goto point_number;
+			}
+
+			cout << "Введите оценки за сессию: \n";
+			for (int i = 0; i < 8; i++) {
+			point_marks:
+				cout << subjects[i];
+				if (!(cin >> students->marks[i])) {
+					problem();
+					goto point_marks;
+				}
+			}
+			students->student_id = number_students + 1;
+			system("cls");
+			new_student_file();
+			break;
+		}
 		case 2:
 			system("cls");
-			return false;
+			if (new_hall())
 			break;
+		case 3:
+			system("cls");
+			return false;
 		default:
-			if (choice > 2) {
+			if (choice > 3) {
 				system("cls");
-				cout << WHITE << "Хмм, что-то пошло не так...\n";
+				cout << "Хмм, что-то пошло не так...\n";
 			}
 		}
 	}
@@ -227,7 +436,7 @@ int change_student(string* subjects, int id) {
 			<< "5. Оценки за прошедшую сессию (3 экзамена, 5 диф.З.).\n"
 			<< "6. Назад\n\n"
 			<< "Выберите действие: ";
-			cin >> choice;
+			if (!(cin >> choice)) problem();
 			switch (choice) {
 			case 1: { //ФИО
 				system("cls");
@@ -240,25 +449,37 @@ int change_student(string* subjects, int id) {
 			}
 			case 2: { // ПОЛ
 				system("cls");
+				point2:
 				bool new_num;
 				cout << "Введите пол. 1 - Мужчина, 0 - Женщина: ";
-				cin >> new_num;
+				if (!(cin >> new_num)) {
+					problem();
+					goto point2;
+				}
 				change_file(MAX_LINES * (id - 1) + 1, "", new_num, 0, 2);
 				break;
 			}
 			case 3: { // ГРУППА
 				system("cls");
+				point3:
 				cout << "Введите номер группы: ";
 				int new_num;
-				cin >> new_num;
+				if (!(cin >> new_num)) {
+					problem();
+					goto point3;
+				}
 				change_file(MAX_LINES * (id - 1) + 2, "", new_num, 0, 2);
 				break;
 			}	
 			case 4: {// НОМЕР В СПИСКЕ
 				system("cls");
+				point4:
 				cout << "Введите номер в списке группы: ";
 				int new_num;
-				cin >> new_num;
+				if (!(cin >> new_num)) {
+					problem();
+					goto point4;
+				}
 				change_file(MAX_LINES * (id - 1) + 3, "", new_num, 0, 2);
 				break;
 			} 
@@ -267,7 +488,12 @@ int change_student(string* subjects, int id) {
 				int new_marks[8];
 				cout << "Введите оценки за сессию: \n";
 				for (int i = 0; i < 8; i++) {
-					cout << subjects[i]; cin >> new_marks[i];
+					point_marks:
+					cout << subjects[i]; 
+					if (!(cin >> new_marks[i])) {
+						problem();
+						goto point_marks;
+					}
 				}
 				change_file(MAX_LINES * (id - 1) + 4, "", 0, new_marks, 3);
 				break;
@@ -276,7 +502,10 @@ int change_student(string* subjects, int id) {
 				system("cls");
 				return false;
 			default:
-				break;
+				if (choice > 6) {
+					system("cls");
+					cout << "Хмм, что-то пошло не так...\n";
+				}
 		}
 	}
 }
@@ -297,18 +526,18 @@ int main() {
 			<< "7 - Студенты без стипендии + оценки студентов\n"
 			<< "8 - Вывод студентов с номером N\n"
 			<< "9 - Завершить работу\n\n"
-			<< "Выберите действие: " << GREEN;
+			<< "Выберите действие: ";
 		if (!(cin >> choice)) problem();
-		cout << WHITE;
+
 		switch (choice) {
 		case 1: {
 			system("cls");
-			new_student(students, subjects);
+			new_student(subjects);
 			break;
 		}
 		case 2: {
 			system("cls");
-		point:
+		point2:
 			int id = 0;
 			int number_students = read_students();
 			cout << "Выберите студента, информацию о котором вы хотели бы изменить (1-" << number_students <<")\n\n";
@@ -316,8 +545,11 @@ int main() {
 
 			cout << "\n0 - Назад\n"
 				<< "Выберите студента: ";
-			cin.ignore();
-			cin >> id;
+
+			if (!(cin >> id)) {
+				problem();
+				goto point2;
+			}
 			if (id == 0) {
 				system("cls");
 				break;
@@ -325,22 +557,25 @@ int main() {
 			system("cls");
 			cout << "ФИО: " << students[id - 1].full_name << "\nПол: " << (students[id - 1].sex ? "Мужской" : "Женский") << "\nГруппа: " << students[id - 1].group << "\nНомер в группе: " << students[id - 1].human_number << "\nОценки за сессию:\n";
 			for (int i = 0; i < 8; i++) cout << subjects[i] << students[id - 1].marks[i] << endl;
-			if (!change_student(subjects, id)) goto point;
+			if (!change_student(subjects, id)) goto point2;
 			break;
 		}
 		case 3: {
 			system("cls");
 			int number_students = read_students();
 			for (int i = 0; i < number_students; i++) print_students(subjects, i);
-			
 			break;
 		}
 		case 4: {
 			system("cls");
+			point4:
 			int search_group = 0;
 			int number_students = read_students();
-			cout << "Ведите номер группы: ";
-			cin >> search_group;
+			cout << "Ведите номер группы: "; 
+			if (!(cin >> search_group)) {
+				problem();
+				goto point4;
+			}
 			for (int i = 0; i < number_students; i++) { if (students[i].group == search_group) print_students(subjects, i); }
 			break;
 		}
@@ -360,16 +595,67 @@ int main() {
 			cout << "Кол-во мужчин: " << man_result << "\nКол-во женщин: " << woman_result << endl;
 			break;
 		}
-		case 7:
+		case 7: {
 			system("cls");
-
+		point7:
+			int number_students = read_students();
+			int id = 0;
+			vector<int> index;
+			for (int i = 0; i < number_students; i++) {
+				int count_fives = 0;
+				int other_marks = 0;
+				int count_fours = 0;
+				int count_threes = 0;
+				for (int j = 0; j < 8; j++) {
+					if (students[i].marks[j] == 3) {
+						count_threes++;
+						break;
+					}
+					else if (students[i].marks[j] == 4) count_fours++;
+					else if (students[i].marks[j] == 5) count_fives++;
+					else {
+						other_marks++;
+						break;
+					}
+				}
+				if (count_threes > 0 || other_marks > 0) {
+					cout << "ID: " << students[i].student_id << " ФИО: " << students[i].full_name << "\tНе получает стипендию\n";
+					index.push_back(students[i].student_id);
+				}
+				else if (count_threes == 0 && (count_fours > 0 && count_fives >= 0)) {
+					cout << "ID: " << students[i].student_id << " ФИО: " << students[i].full_name << "\tУчится на хорошо и отлично\n";
+					index.push_back(students[i].student_id);
+				}
+				else if (count_fives == 8) {
+					cout << "ID: " << students[i].student_id << " ФИО: " << students[i].full_name << "\tУчится на отлично\n";
+					index.push_back(students[i].student_id);
+				}
+			}
+			
+			cout << "\n0 - Назад\nВыберите студента, информацию о котором хотите вывести: ";
+			if (!(cin >> id)) {
+				problem();
+				goto point7;
+			}
+			if (id == 0) break;
+			for (int i = 0; i < number_students; i++) {
+				if (id == index[i]) {
+					print_students(subjects, i);
+					break;
+				}
+			}
 			break;
+		}
 		case 8: {
 			system("cls");
+			point8:
 			int number_students = read_students();
 			int snig = 0;
 			cout << "Введите номер в списке группы: ";
-			cin >> snig;
+			if (!(cin >> snig)) {
+				problem();
+				goto point8;
+			}
 			for (int i = 0; i < number_students; i++) {
 				if (students[i].human_number == snig) print_students(subjects, i);
 			}
