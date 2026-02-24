@@ -34,6 +34,9 @@ struct Hall {
 	int hall_size = 0;
 	bool projector;
 	double rent;
+	bool open = true;
+	int hours;
+	int minutes;
 };
 struct Hall hall[1000];
 
@@ -50,7 +53,7 @@ int read_hall() {
 			field_number = 0;
 			continue;
 		}
-		if (field_number >= 6) {
+		if (field_number >= 9) {
 			cout << "Too many fields";
 			return 0;
 		}
@@ -69,6 +72,15 @@ int read_hall() {
 			break;
 		case 4:
 			hall[count_hall].rent = stod(line);
+			break;
+		case 5:
+			hall[count_hall].open = stod(line);
+			break;
+		case 6:
+			hall[count_hall].hours = stod(line);
+			break;
+		case 7:
+			hall[count_hall].minutes = stod(line);
 			break;
 		}
 		field_number++;
@@ -142,7 +154,8 @@ int read_students() {
 
 void print_halls(int i) {
 	cout << "Номер аудитории: " << hall[i].hall_number << "\nКорпус: " << hall[i].building << "\nВместимость (чел.): " << hall[i].hall_size
-		<< "\nНаличие проектора: " << (hall[i].projector ? "Есть" : "Нету") << "\nСтоимость аренды в час: " << hall[i].rent << " руб.\n";
+		<< "\nНаличие проектора: " << (hall[i].projector ? "Есть" : "Нету") << "\nСтоимость аренды в час: " 
+		<< hall[i].rent << " руб." << "\nЗабронированна: " << (hall[i].open ? "Нет\n" : "Да\n");
 }
 
 void print_students(string* subjects, int i) {
@@ -232,9 +245,100 @@ void new_hall_file() {
 	record.open("halls.txt", ios::app);
 	if (!record.is_open()) { cout << "Не получилось открыть файл."; }
 	else {
-		record << hall->hall_number << endl << hall->building << endl << hall->hall_size << endl << hall->projector << endl << hall->rent << endl << endl;
+		record << hall->hall_number << endl << hall->building << endl << hall->hall_size << endl 
+			<< hall->projector << endl << hall->rent << endl  << hall->open << endl << hall->hours << endl << hall->minutes << endl << endl;
 		record.close();
 		cout << "Новая аудитория " << GREEN "успешно" << WHITE << " записана в файл.\n";
+	}
+}
+
+void change_hall_file(int id_line, int new_number, double new_rent, int print_flag) {
+	ifstream in("halls.txt");
+	ofstream out("temp.txt");
+	string line;
+	int current_line = 0;
+
+
+	while (getline(in, line)) {
+		if (current_line == id_line) {
+			if (!(new_number == -1)) out << new_number << endl;
+			if (!(new_rent == -1)) out << new_rent << endl;
+		}
+		else out << line << endl;
+		++current_line;
+	}
+
+	in.close();
+	out.close();
+	remove("halls.txt");
+	rename("temp.txt", "halls.txt");
+	if (print_flag) cout << "Новые изменения были " << GREEN "успешно" << WHITE << " применены.\n";
+}
+
+bool booking() {
+	short choice, counter = 0;
+	int save = 0, MAX_LINES = 9;
+	while (true) {
+		cout << "Бронирование аудиторий.\nСписок свободных аудиторий:\n";
+		int count_halls = read_hall();
+		for (int i = 0; i < count_halls; i++) {
+			if (hall[i].open) {
+				cout << "Аудитория: " << hall[i].hall_number << endl;
+				counter++;
+			}
+		}
+		if (counter == 0) {
+			system("cls");
+			cout << "Список пуст.\n\n";
+			return false;
+		}
+		cout << "\n\nВведите номер аудитории, чтобы забронировать: ";
+		if (!(cin >> choice)) problem();
+		for (int i = 0; i < count_halls; i++) {
+			if (hall[i].hall_number == choice) {
+				save = i;
+				break;
+			}
+		}
+		system("cls");
+	time:
+		string time1 = "";
+
+		cout << "Введите нужное время: ";
+		cin.ignore(numeric_limits<streamsize>::max(), '\n');
+		getline(cin, time1);
+		string time2 = time1;
+		int j = 0;
+		for (int i = 0; i < time1.length(); i++) {
+			if (j > 2) {
+				cout << "Ошибка ввода, вы неверно указали время!\n";
+				goto time;
+			}
+			if (time1[i] != ':' && time1[i] != '.' && time1[i] != ' ') j++;
+			else {
+				j = 0;
+				hall[save].hours = stod(time2.erase(2));
+				time1.erase((time1.begin()), (time1.begin() + 3));
+				if (time1.length() == 2) {
+					hall[save].minutes = stod(time1);
+					break;
+				}
+				else {
+					cout << "Ошибка ввода, вы неверно указали время!\n";
+					goto time;
+				}
+			}
+		}
+		system("cls");
+		cout << "Аудитория " << GREEN << "успешно " << WHITE << "забронирована на " << hall[save].hours << ":";
+		if (hall[save].minutes < 10) cout << 0 << hall[save].minutes << endl << endl;
+		else cout << hall[save].minutes << endl << endl;
+		change_hall_file(MAX_LINES * save + 5, 0, -1, 0);
+		change_hall_file(MAX_LINES * save + 6, hall[save].hours, -1, 0);
+		change_hall_file(MAX_LINES * save + 7, hall[save].minutes, -1, 0);
+		
+		read_hall();
+		return 0;
 	}
 }
 
@@ -243,7 +347,8 @@ bool new_hall() {
 	while (true) {
 		cout << "1 - Начать запись\n"
 			<< "2 - Вывести записи\n"
-			<< "3 - Назад\n\n"
+			<< "3 - Забронировать аудиторию\n"
+			<< "4 - Назад\n\n"
 			<< "Чтобы создать запись об аудитории, необходимы следующие данные:\n\n"
 			<< "1. Номер аудитории\n"
 			<< "2. Корпус\n"
@@ -290,6 +395,7 @@ bool new_hall() {
 				problem();
 				goto point_rent;
 			}
+			hall->open = true; hall->hours = 0; hall->minutes = 0;
 			system("cls");
 			new_hall_file();
 			break;
@@ -300,6 +406,10 @@ bool new_hall() {
 			break;
 		case 3:
 			system("cls");
+			booking();
+			break;
+		case 4:
+			system("cls");
 			return false;
 		default:
 			if (choice > 3) {
@@ -309,6 +419,7 @@ bool new_hall() {
 		}
 	}
 }
+
 
 
 void new_student_file() {
@@ -327,6 +438,7 @@ void new_student_file() {
 bool new_student(string* subjects) {
 	short choice = 0;
 	while (true) {
+		point_back:
 		cout << "1 - Начать запись\n"
 			<< "2 - Меню для аудиторий\n"
 			<< "3 - Назад\n\n"
@@ -383,7 +495,7 @@ bool new_student(string* subjects) {
 		}
 		case 2:
 			system("cls");
-			if (new_hall())
+			if (!new_hall()) goto point_back;
 			break;
 		case 3:
 			system("cls");
