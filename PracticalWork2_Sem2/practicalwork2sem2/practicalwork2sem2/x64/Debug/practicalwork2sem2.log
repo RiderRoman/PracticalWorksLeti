@@ -1,0 +1,3 @@
+﻿  practicalwork2sem2.cpp
+C:\Users\Admin\source\repos\PracticalWorksLeti\PracticalWork2_Sem2\practicalwork2sem2\practicalwork2sem2\practicalwork2sem2.cpp(168,12): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+  practicalwork2sem2.vcxproj -> C:\Users\Admin\source\repos\PracticalWorksLeti\PracticalWork2_Sem2\practicalwork2sem2\x64\Debug\practicalwork2sem2.exe
