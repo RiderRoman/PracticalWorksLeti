@@ -1,4 +1,0 @@
-﻿  PracticalWork1_Sem2.cpp
-C:\Users\Admin\source\repos\PracticalWorksLeti\PracticalWork1_Sem2\PracticalWork1_Sem2\PracticalWork1_Sem2.cpp(287,1): warning C4715: time_record: значение возвращается не при всех путях выполнения
-C:\Users\Admin\source\repos\PracticalWorksLeti\PracticalWork1_Sem2\PracticalWork1_Sem2\PracticalWork1_Sem2.cpp(353,1): warning C4715: booking: значение возвращается не при всех путях выполнения
-  PracticalWork1_Sem2.vcxproj -> C:\Users\Admin\source\repos\PracticalWorksLeti\PracticalWork1_Sem2\x64\Debug\PracticalWork1_Sem2.exe
