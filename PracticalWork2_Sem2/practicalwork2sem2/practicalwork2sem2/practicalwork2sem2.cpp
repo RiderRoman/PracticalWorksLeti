@@ -9,10 +9,27 @@
 #define GREEN "\x1b[32m"
 #define WHITE "\x1b[0m"
 
+const int ACTION_CREATE_LIST = 1;
+const int ACTION_CREATE_USER_LIST = 2;
+const int ACTION_PRINT_LIST = 3;
+const int ACTION_ADD_NUMBER = 4;
+const int ACTION_DELETE_NUMBER = 5;
+const int ACTION_SWAP_NUMBER = 6;
+const int ACTION_FIND_NUMBER = 7;
+const int ACTION_TURN_OFF = 8;
+
+const int DELETE_BY_INDEX = 1;
+const int DELETE_BY_VALUE = 2;
+
+const int FIND_BY_INDEX = 1;
+const int FIND_BY_VALUE = 2;
+
+const int ACTION_SECOND_TURN_OFF = 0;
+
 using namespace std;
 using namespace chrono;
 
-void problem() {
+void cinFail() {
 	system("cls");
 	cout << WHITE << "Ошибка ввода, повторите еще раз.\n";
 	cin.clear();
@@ -22,7 +39,7 @@ void problem() {
 auto rightInput(auto& argument) {
 	string input;
 	if (!(cin >> input)) {
-		problem();
+		cinFail();
 		return 0;
 	}
 
@@ -31,19 +48,30 @@ auto rightInput(auto& argument) {
 		argument = stoi(input, &pos);
 
 		if (pos != input.length()) {
-			problem();
+			cinFail();
 			return 0;
 		}
 	}
 	catch (const invalid_argument& e) {
-		problem();
+		cinFail();
 		return 0;
 	}
 	catch (const out_of_range& e) {
-		problem();
+		cinFail();
 		return 0;
 	}
 }
+
+bool checkIndex(int indexes[], int size, int index) {
+	for (int i = 0; i < size; i++) {
+		if (indexes[i] == index) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
 
 class Node {
 public:
@@ -77,14 +105,18 @@ public:
 		}
 	}
 
-	void printUserList(int index1, int index2) {
-		Node* current = head;
+	void printUserList(int indexes[], int size) {
+		Node* temp = head;
 		int pos = 0;
-		while (current) {
-			if (pos == index1 || pos == index2) { cout << GREEN << current->data << WHITE << " "; }
-			else cout << current->data << " ";
+		while (temp) {
+			if (checkIndex(indexes, size, pos)) {
+				cout << GREEN << temp->data << WHITE << " ";
+			}
+			else {
+				cout << temp->data << " ";
+			}
 			pos++;
-			current = current->next;
+			temp = temp->next;
 		}
 		cout << endl;
 	}
@@ -159,9 +191,7 @@ void addNumber(DoublyLinkedList& list, int index, int value) {
 
 	int i = 0;
 	while (temp != NULL) {
-
 		if ((i + 1) == index) {
-
 			save1 = temp->next;
 			newNode->next = save1;
 			newNode->prev = temp;
@@ -179,7 +209,6 @@ void addNumber(DoublyLinkedList& list, int index, int value) {
 bool checkNumber(string arr, int size) {
 	string numbers = "0123456789";
 	for (int i = 0; i < size; i++) {
-		/*if (arr[i] == "\0") break;*/
 		bool hit = false;
 
 		for (int j = 0; j < 10; j++) {
@@ -204,7 +233,7 @@ void extraRecord(DoublyLinkedList& list) {
 	}
 }
 
-int deleteIndex(DoublyLinkedList& list, int index) {
+void deleteIndex(DoublyLinkedList& list, int index) {
 	Node* temp = list.head;
 	int pos = 0;
 
@@ -217,16 +246,14 @@ int deleteIndex(DoublyLinkedList& list, int index) {
 			else list.tail = temp->prev;
 
 			delete temp;
-			return true;
+			break;
 		}
 		pos++;
 		temp = temp->next;
 	}
-
-	return false;
 }
 
-bool deleteNumber(DoublyLinkedList& list, int number) {
+void deleteNumber(DoublyLinkedList& list, int number) {
 	Node* temp = list.head;
 
 	while (temp) {
@@ -238,21 +265,18 @@ bool deleteNumber(DoublyLinkedList& list, int number) {
 			else list.tail = temp->prev;
 
 			delete temp;
-			return true;
+			break;
 		}
 		temp = temp->next;
 	}
-
-	return false;
 }
 
-bool swapNumbers(DoublyLinkedList& list, int index1, int index2) {
+void swapNumbers(DoublyLinkedList& list, int index1, int index2) {
 	Node* temp = list.head;
 	Node* save = temp;
 	int data1;
 	int data2;
 	int pos = 0;
-	bool flag = false;
 	int saveIndex;
 	if (index1 > index2) {
 		saveIndex = index1;
@@ -261,27 +285,25 @@ bool swapNumbers(DoublyLinkedList& list, int index1, int index2) {
 	}
 
 	while (temp) {
-		if (pos == index1 && !flag) {
+		if (pos == index1) {
 			data1 = temp->data;
 			save = temp;
-			flag = true;
 		}
-		if (pos == index2 && flag) {
+		if (pos == index2) {
 			data2 = temp->data;
 			temp->data = data1;
 			save->data = data2;
-			return true;
+			break;
 		}
 		pos++;
 		temp = temp->next;
 	}
-	return false;
 }
-
-const int ACTION_CREATE_LIST = 1;
 
 int main() {
 	DoublyLinkedList list;
+	int* arr = 0;
+	
 	srand(time(NULL));
 	setlocale(LC_ALL, "RU");
 	SetConsoleCP(1251);
@@ -291,16 +313,16 @@ int main() {
 		int userChoice;
 		cout << "-----------------------------------------\n"
 			<< ACTION_CREATE_LIST << " - Создать список с числами от 0 до 99\n"
-			<< "2 - Создать список со своими числами\n"
-			<< "3 - Вывести текущий список\n"
+			<< ACTION_CREATE_USER_LIST << " - Создать список со своими числами\n"
+			<< ACTION_PRINT_LIST << " - Вывести текущий список\n"
 			<< "-----------------------------------------\n"
-			<< "4 - Добавить элемент в список\n"
-			<< "5 - Удалить элемент из списка\n"
-			<< "6 - Поменять местами элементы в списке\n"
-			<< "7 - Найти элемент в списке\n"
-			<< "8 - Завершить работу\n"
+			<< ACTION_ADD_NUMBER << " - Добавить элемент в список\n"
+			<< ACTION_DELETE_NUMBER << " - Удалить элемент из списка\n"
+			<< ACTION_SWAP_NUMBER << " - Поменять местами элементы в списке\n"
+			<< ACTION_FIND_NUMBER << " - Найти элемент в списке\n"
+			<< ACTION_TURN_OFF << " - Завершить работу\n"
 			<< "-----------------------------------------\n"
-			<< "Выбор: ";
+			<< "Выборите действие: ";
 		cin >> userChoice;
 		switch (userChoice) {
 		case ACTION_CREATE_LIST: {
@@ -326,11 +348,11 @@ int main() {
 				list.createNode(random);
 				record(random);
 			}
-			list.printUserList(-1, -1);
+			list.printUserList(arr, 0);
 			list.deleteUserList();
 			break;
 		}
-		case 2: {
+		case ACTION_CREATE_USER_LIST: {
 			system("cls");
 			if (numberOfCreatures == 0 && readList(list, numberOfCreatures) == -1) {
 				remove("list.txt");
@@ -342,39 +364,40 @@ int main() {
 			cout << "e - выход\n"
 				<< "enter - новый элемент\n";
 			string number;
+			
 			while (true) {
 				cout << "Введите элемент списка: ";
 				cin >> number;
 				if (number == "e" || number == "е") {
 					break;
 				}
-				int size = number.length();
-				if (checkNumber(number, size) == false) {
+				int len = number.length();
+				if (checkNumber(number, len) == false) {
 					cout << "\nОшибка ввода повторите ещё раз.\n";
 					continue;
 				}
-
+				
 				list.createNode(stoi(number));
 				record(stoi(number));
 			}
 
-			list.printUserList(-1, -1);
+			list.printUserList(arr, 0);
 			list.deleteUserList();
 			break;
 		}
-		case 3: {
+		case ACTION_PRINT_LIST: {
 			system("cls");
 			if (numberOfCreatures == 0) {
 				cout << "Список не найден, попробуйте создать новый.\n";
 				break;
 			}
 			int size = readList(list, numberOfCreatures);
-			list.printUserList(-1, -1);
+			list.printUserList(arr, 0);
 			cout << "\nКол-во элементов: " << size << endl;
 			list.deleteUserList();
 			break;
 		}
-		case 4: {
+		case ACTION_ADD_NUMBER: {
 			system("cls");
 			if (numberOfCreatures == 0) {
 				cout << "Список не найден, попробуйте создать новый.\n";
@@ -382,7 +405,8 @@ int main() {
 			}
 
 			int size = readList(list, numberOfCreatures);
-			int index = 0, number = 0;
+			int number = 0;
+			int index = 0;
 
 			cout << "Введите индекс: ";
 			if (!(rightInput(index))) {
@@ -400,15 +424,15 @@ int main() {
 				list.deleteUserList();
 				break;
 			}
-
+			int* indexes = &index;
 			addNumber(list, index, number);
 			extraRecord(list);
 
-			list.printUserList(index, -1);
+			list.printUserList(indexes, 1);
 			list.deleteUserList();
 			break;
 		}
-		case 5: {
+		case ACTION_DELETE_NUMBER: {
 			system("cls");
 			if (numberOfCreatures == 0) {
 				cout << "Список не найден, попробуйте создать новый.\n";
@@ -417,9 +441,9 @@ int main() {
 
 			int size = readList(list, numberOfCreatures);
 
-			cout << "1 - Удалить по индексу\n"
-				<< "2 - Удалить по значению\n"
-				<< "0 - Выход\n\n"
+			cout << DELETE_BY_INDEX << " - Удалить по индексу\n"
+				<< DELETE_BY_VALUE << " - Удалить по значению\n"
+				<< ACTION_SECOND_TURN_OFF << " - Выход\n\n"
 				<< "Выберите действие: ";
 			int userChoiceCase5;
 			if (!(rightInput(userChoiceCase5))) {
@@ -428,9 +452,9 @@ int main() {
 			}
 			system("cls");
 
-			if (userChoiceCase5 == 1) {
+			if (userChoiceCase5 == DELETE_BY_INDEX) {
 				cout << "Введите индекс: ";
-				int index;
+				int index = 0;
 				if (!(rightInput(index))) {
 					list.deleteUserList();
 					break;
@@ -440,26 +464,26 @@ int main() {
 					list.deleteUserList();
 					break;
 				}
-
-				list.printUserList(index, -1);
+				int* indexes = &index;
+				list.printUserList(indexes, 1);
 				cout << endl;
 				deleteIndex(list, index);
 				extraRecord(list);
 
-				list.printUserList(-1, -1);
+				list.printUserList(arr, 0);
 			}
-			if (userChoiceCase5 == 2) {
+			if (userChoiceCase5 == DELETE_BY_VALUE) {
 				cout << "Введите число: ";
-				int count = 0, userNumber = 0;
+				int count = 0, value = 0;
 
-				if (!(rightInput(userNumber))) {
+				if (!(rightInput(value))) {
 					list.deleteUserList();
 					break;
 				}
 
 				Node* temp = list.head;
 				while (temp) {
-					if (temp->data == userNumber) {
+					if (temp->data == value) {
 						cout << GREEN << temp->data << WHITE << " ";
 						count++;
 					}
@@ -469,28 +493,28 @@ int main() {
 					temp = temp->next;
 				}
 
-				for (short i = 0; i < count; i++) deleteNumber(list, userNumber);
+				for (short i = 0; i < count; i++) deleteNumber(list, value);
 
 				extraRecord(list);
 				cout << endl << endl;
-				list.printUserList(-1, -1);
+				list.printUserList(arr, 0);
 			}
 
 			list.deleteUserList();
 			break;
 		}
-		case 6: {
+		case ACTION_SWAP_NUMBER: {
 			system("cls");
 			if (numberOfCreatures == 0) {
 				cout << "Список не найден, попробуйте создать новый.\n";
 				break;
 			}
-		point6:
-			unsigned int size = readList(list, numberOfCreatures);
-
+			int size = readList(list, numberOfCreatures);
+			int index1, index2;
 
 			cout << "Введите индекс: ";
-			unsigned int index1 = 0, index2 = 0;
+			
+
 			if (!(rightInput(index1))) {
 				list.deleteUserList();
 				break;
@@ -498,28 +522,33 @@ int main() {
 			if (index1 > (size - 1) || index1 < 0) {
 				cout << "Вы ввели неверный индекс, повторите ещё раз.\n";
 				list.deleteUserList();
-				goto point6;
 			}
 			cout << "Введите индекс: ";
 			if (!(rightInput(index2))) {
 				list.deleteUserList();
 				break;
 			}
-			if (index2 > (size - 1) || index1 < 0) {
+			if (index2 > (size - 1) || index2 < 0) {
 				cout << "Вы ввели неверный индекс, повторите ещё раз.\n";
 				list.deleteUserList();
-				goto point6;
 			}
 
-			list.printUserList(index1, index2);
+			int* indexes = new int[2];
+			*indexes = index1; 
+			indexes++;
+			*indexes = index2;
+			indexes--;
+
+			list.printUserList(indexes, 2);
 			swapNumbers(list, index1, index2);
 			extraRecord(list);
 			cout << endl;
-			list.printUserList(index1, index2);
+			list.printUserList(indexes, 2);
 			list.deleteUserList();
+			delete indexes;
 			break;
 		}
-		case 7: {
+		case ACTION_FIND_NUMBER: {
 			system("cls");
 			if (numberOfCreatures == 0) {
 				cout << "Список не найден, попробуйте создать новый.\n";
@@ -528,19 +557,22 @@ int main() {
 			int size = readList(list, numberOfCreatures);
 			int userChoiceCase6;
 
-			cout << "1 - Найти по индексу\n"
-				<< "2 - Найти по значению\n"
-				<< "0 - Назад\n\n"
+			cout << FIND_BY_INDEX << " - Найти по индексу\n"
+				<< FIND_BY_VALUE << " - Найти по значению\n"
+				<< ACTION_SECOND_TURN_OFF << " - Назад\n\n"
 				<< "Выберите действие: ";
 
 			rightInput(userChoiceCase6);
 
-			if (userChoiceCase6 == 1) {
+			if (userChoiceCase6 == FIND_BY_INDEX) {
 				system("cls");
 				cout << "Введите индекс: ";
-				int index;
+				int index = 0;
 
-				rightInput(index);
+				if (!(rightInput(index))) {
+					list.deleteUserList();
+					break;
+				}
 				if (index > size) {
 					system("cls");
 					cout << "Элемент не найден.\n";
@@ -549,23 +581,28 @@ int main() {
 				}
 
 				Node* userNumber;
-				auto time1 = high_resolution_clock::now();
+				auto start = high_resolution_clock::now();
 				userNumber = getNumber(list, index, size);
-				auto time2 = high_resolution_clock::now();
-				auto end = duration_cast<nanoseconds>(time2 - time1).count();
+				auto end = high_resolution_clock::now();
+				auto time = duration_cast<nanoseconds>(end - start).count();
 
-				list.printUserList(index, -1);
+				int* indexes = &index;
+
+				list.printUserList(indexes, 1);
 				cout << "\nЭлемент с индексом " << index << ": " << GREEN << userNumber->data << WHITE << endl;
-				cout << "Время на поиск: " << end << " наносекунд\n";
+				cout << "Время на поиск: " << time << " наносекунд\n";
 			}
-			else if (userChoiceCase6 == 2) {
+			else if (userChoiceCase6 == FIND_BY_VALUE) {
 				system("cls");
 				cout << "Введите целое число: ";
 				int userNumber;
-				rightInput(userNumber);
+				if (!(rightInput(userNumber))) {
+					list.deleteUserList();
+					break;
+				}
 
-				Node* temp = list.head;
-				int mini = temp->data, maxi = temp->data;
+				Node* temp = list.head->next;
+				int mini = temp->prev->data, maxi = temp->prev->data;
 				while (temp) {
 					if (temp->data > maxi) maxi = temp->data;
 					else if (temp->data < mini) mini = temp->data;
@@ -579,48 +616,42 @@ int main() {
 					list.deleteUserList();
 					break;
 				}
-				int i = 0, count = 0;
+				int currentIndex = 0, count = 0;
 				int* index = new int[size];
 
 				temp = list.head;
 
-				auto time1 = high_resolution_clock::now();
+				auto start = high_resolution_clock::now();
 
 				while (temp) {
 					if (temp->data == userNumber) {
-						*index = i;
+						*index = currentIndex;
 						index++;
 						count++;
 					}
 					else {
 					}
-					i++;
+					currentIndex++;
 					temp = temp->next;
 				}
 
-				auto time2 = high_resolution_clock::now();
-				auto end = duration_cast<nanoseconds>(time2 - time1).count();
-
-				while (temp) { // DFGJDFLKGJLDFKJGKLFDJG!!!
-					if (temp->data == userNumber) cout << GREEN << temp->data << WHITE << " ";
-					else cout << temp->data << " ";
-
-					temp = temp->next;
-				}
-
+				auto end = high_resolution_clock::now();
+				auto time = duration_cast<nanoseconds>(end - start).count();
+				
 				if (count == 0) {
 					system("cls");
 					cout << "Элемент не найден.\n";
 					list.deleteUserList();
 					break;
 				}
+				index = index - count;
+				list.printUserList(index, count);
 
 				cout << "\nИндексы: ";
 				for (int j = 0; j < count; j++) {
-					cout << *(index - count + j) << " ";
+					cout << *(index + j) << " ";
 				}
-				cout << "\nВремя на поиск: " << end << " наносекунд\n";
-				index = index - count;
+				cout << "\nВремя на поиск: " << time << " наносекунд\n";
 				delete index;
 			}
 			else {
@@ -630,13 +661,13 @@ int main() {
 			list.deleteUserList();
 			break;
 		}
-		case 8: {
+		case ACTION_TURN_OFF: {
 			cout << "Работа завершена.";
 			return false;
 		}
 		default:
 			system("cls");
-			problem();
+			cinFail();
 		}
 	}
 	return 0;
