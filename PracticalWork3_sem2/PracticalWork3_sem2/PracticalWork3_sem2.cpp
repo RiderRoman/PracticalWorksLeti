@@ -16,8 +16,9 @@ const int ACTION_CHECK_PROBLEM = 2;
 const int ACTION_SOLVE_PROBLEM = 3;
 const int ACTION_TURN_OFF = 0;
 
-const int DIRECT_POLISH_NOTATION = 1;
-const int REVERSE_POLISH_NOTATION = 2;
+const int COMMON_PROBLEM = 1;
+const int DIRECT_POLISH_NOTATION = 2;
+const int REVERSE_POLISH_NOTATION = 3;
 
 class Stack {
 private:
@@ -64,7 +65,8 @@ void print_menu(int variant) {
 			<< "Выберите действие: ";
 	}
 	if (variant == ACTION_PRINT_NOTATION) {
-		cout << DIRECT_POLISH_NOTATION << " - прямая польская нотация\n"
+		cout << COMMON_PROBLEM << " - простое выражение\n"
+			<< DIRECT_POLISH_NOTATION << " - прямая польская нотация\n"
 			<< REVERSE_POLISH_NOTATION << " - обратная польская нотация\n"
 			<< ACTION_TURN_OFF << " - назад\n\n"
 			<< "Выберите нотацию: ";
@@ -83,7 +85,27 @@ int digit_or_operation(string symbol, int index) {
 	return -1;
 }
 
-int reverse_polish_notation(Stack digits) {
+void solve_problem(Stack &digits, char operation, int a, int b) {
+	switch (operation) {
+	case '+': {
+		digits.push(a + b);
+		break;
+	}
+	case '-': {
+		digits.push(a - b);
+		break;
+	}
+	case '/': {
+		digits.push(a / b);
+		break;
+	}
+	case '*': {
+		digits.push(a * b);
+		break;
+	}
+	}
+}
+int reverse_polish_notation(Stack &digits) {
 	string problem;
 	cin.ignore();
 	getline(cin, problem);
@@ -99,27 +121,7 @@ int reverse_polish_notation(Stack digits) {
 				if (check == 2) {
 					int a = digits.top(); digits.pop();
 					int b = digits.top(); digits.pop();
-
-					switch (problem[count - 1]) {
-					case '+': {
-						digits.push(a + b);
-
-						break;
-					}
-					case '-': {
-						digits.push(a - b);
-						break;
-					}
-					case '/': {
-						digits.push(a / b);
-						break;
-					}
-					case '*': {
-						digits.push(a * b);
-						break;
-					}
-					}
-
+					solve_problem(digits, problem[count - 1], a, b);
 				}
 				else if (check == 1) {
 					digits.push(stoi(sub));
@@ -254,7 +256,7 @@ int main() {
 			print_menu(ACTION_PRINT_NOTATION);
 			int choice_solve = 0;
 
-			while (!(cin >> choice_solve) || choice_solve < 0 || choice_solve > 2) {
+			while (!(cin >> choice_solve) || choice_solve < 0 || choice_solve > 3) {
 				error();
 				print_menu(ACTION_PRINT_NOTATION);
 			}
